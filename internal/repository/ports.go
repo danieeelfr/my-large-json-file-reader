@@ -50,8 +50,9 @@ func (r *Repository) Set(ports map[string]interface{}) error {
 		if e != nil {
 			fmt.Printf("error when saving=%v \n result=%v \n", e, r)
 			errs++
+			break
 			// TODO: improve this error handling
-			// I choice to do not stop the process here, but if the error is a connection error
+			// First I choice to do not stop the process here, but if the error is a connection error
 			// Is better to stop.
 		}
 	}
