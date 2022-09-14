@@ -1,0 +1,35 @@
+FROM golang:1.16.5-alpine3.12 as builder
+
+RUN mkdir /app
+WORKDIR /app
+
+COPY . .
+COPY ports.json .
+
+
+ENV CGO_ENABLED=0 
+ENV GOOS=linux 
+ENV GOARCH=amd64 
+
+RUN go get -d -v ./...
+RUN go install -v ./...
+RUN go mod download
+RUN go build -a -installsuffix cgo -o app cmd/main.go
+
+FROM scratch
+
+COPY --from=builder /app/app /app
+COPY --from=builder /app/ports.json .
+
+ENV JSON_FILE_PATH="ports.json"
+ENV GOMEMLIMIT="300MiB"
+
+ENV REDIS_HOST="localhost"
+ENV REDIS_PORT="6379"
+ENV REDIS_PASSWORD="mypass"
+ENV REDIS_DB=0
+
+
+EXPOSE 8013
+
+CMD ["./app"]
