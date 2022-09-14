@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/danieeelfr/my-large-json-file-reader/internal/config"
+	"github.com/danieeelfr/my-large-json-file-reader/internal/models"
 	"github.com/go-redis/redis"
 )
 
@@ -21,7 +22,7 @@ type Repository struct {
 }
 
 // NewRepository Return a implementation of PortsRepo
-func NewRepository(cfg *config.Config) PortsRepo {
+func NewRepository(cfg *config.Config) *Repository {
 	return &Repository{
 		redisClient: redis.NewClient(&redis.Options{
 			Addr:     fmt.Sprintf("%s:%s", cfg.Redis.Host, cfg.Redis.Port),
@@ -50,7 +51,7 @@ func (r *Repository) Set(ports map[string]interface{}) error {
 		if e != nil {
 			fmt.Printf("error when saving=%v \n result=%v \n", e, r)
 			errs++
-			break
+			return e
 			// TODO: improve this error handling
 			// First I choice to do not stop the process here, but if the error is a connection error
 			// Is better to stop.
@@ -60,6 +61,22 @@ func (r *Repository) Set(ports map[string]interface{}) error {
 	elapsed := time.Since(start)
 
 	fmt.Printf("The saving on database process took [%v] and saved [%d] of [%d] records\n", elapsed, len(ports)-errs, len(ports))
+
+	return nil
+}
+
+// Set save or update the port values according the map passed as parameter
+func (r *Repository) SetPort(title string, port *models.Port) error {
+
+	s := r.redisClient.Set(title, fmt.Sprintf("%v", port), 0) // wont expire
+
+	result, e := s.Result()
+	if e != nil {
+		fmt.Printf("error when saving=%v \n result=%v \n", e, result)
+		return e
+	}
+
+	fmt.Printf("Port: %s saved on database\n", title)
 
 	return nil
 }

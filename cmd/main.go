@@ -41,14 +41,10 @@ func main() {
 	cfg := config.NewConfig()
 
 	repo := repository.NewRepository(cfg)
-	srv := service.NewPortService(cfg)
+	srv := service.NewPortService(cfg, repo)
 
-	ports, err := srv.ReadAndDecode()
+	err := srv.ReadAndDecode()
 	if err != nil {
-		log.Fatal(err)
-	}
-
-	if err := repo.Set(ports.Records); err != nil {
 		log.Fatal(err)
 	}
 
@@ -57,6 +53,7 @@ func main() {
 	// if err != nil {
 	// 	log.Fatal(err)
 	// }
+
 	<-wait
 
 	fmt.Println("finished without errors!")
